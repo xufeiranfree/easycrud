@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: rbcc-em-mfd-superlineleader
+  datasource:
+    driverClassName: org.h2.Driver
+    url: jdbc:h2:file:c:/tools/h2/super_line_leader;MODE=Oracle;DEFAULT_NULL_ORDERING=HIGH;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1
+    platform: h2
+    username: username
+    password: password
+    jpa:
+#      database-platform: org.hibernate.dialect.H2Dialect
+      database-platform: org.hibernate.dialect.Oracle12cDialect
+      show-sql: true
+  boot:
+    admin:
+      client:
+        enabled: true
+        url: http://localhost:8080
+
+server:
+  port: 8100
+  servlet:
+    context-path: /rbcc-em-mfd-superlineleader
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+  security:
+    enabled: false
+  loggers:
+    enabled: true
+
+custom:
+  cache:
+    engine: Caffeine

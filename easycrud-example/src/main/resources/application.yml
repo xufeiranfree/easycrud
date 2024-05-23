@@ -1,0 +1,4 @@
+spring:
+  profiles:
+    active: @profiles.activate@
+### 请勿添加 以便将配置复制进配置中心 ###
