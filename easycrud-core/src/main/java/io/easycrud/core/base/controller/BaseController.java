@@ -1,104 +1,101 @@
-package io.easycrud.core.base.controller;
-
+package com.bosch.cn.em.mfd.core.base.controller;
 
 import io.easycrud.core.base.entity.BaseDTO;
-import io.easycrud.core.base.entity.BaseEntityAudit;
 import io.easycrud.core.base.entity.BaseVO;
 import io.easycrud.core.base.exception.BaseException;
 import io.easycrud.core.base.exception.ExceptionEnum;
 import io.easycrud.core.base.service.BaseService;
 import io.easycrud.core.constant.URLConstants;
+import io.swagger.v3.oas.annotations.Operation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.Collection;
-import java.util.Optional;
 
+@Slf4j
 public class BaseController<DTO extends BaseDTO, VO extends BaseVO> {
 
     @Autowired
     protected BaseService<DTO, VO> baseService;
 
-    @GetMapping
+    //    @GetMapping
+    @Operation(summary = "find all")
     public ResponseEntity<?> find() {
-
-        Collection<VO> all = baseService.find();
-        return ResponseEntity.ok(all);
+        return ResponseEntity.ok(baseService.find());
     }
 
-    @PostMapping
+    //    @GetMapping
+    @Operation(summary = "find one page")
+    public ResponseEntity<?> find(@PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(baseService.find(pageable));
+    }
+
+    //    @PostMapping
+    @Operation(summary = "create one")
     public ResponseEntity<?> create(@RequestBody DTO dto) {
 
-        Optional<VO> vo = baseService.create(dto);
-
-        vo.orElseThrow(() -> BaseException.builder()
-                .exceptionEnum(ExceptionEnum.CREATE_FAILED)
-                .build());
+        VO vo = baseService.create(dto)
+                .orElseThrow(() -> BaseException.builder()
+                        .exceptionEnum(ExceptionEnum.CREATE_FAILED)
+                        .build());
 
         URI uri = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path(URLConstants.PATH_VARIABLE_ID)
-                .buildAndExpand(vo.map(BaseEntityAudit::getId).orElse(null))
+                .buildAndExpand(vo.getId())
                 .toUri();
         return ResponseEntity.created(uri).build();
     }
 
-    @GetMapping(URLConstants.PATH_VARIABLE_ID)
+    //    @GetMapping(URLConstants.PATH_VARIABLE_ID)
+    @Operation(summary = "find by id")
     public ResponseEntity<?> find(@PathVariable String id) {
 
-        Optional<VO> vo = baseService.find(id);
+        VO vo = baseService.find(id)
+                .orElseThrow(() -> BaseException.builder()
+                        .exceptionEnum(ExceptionEnum.NOT_FOUND_EXCEPTION)
+                        .build());
 
-        vo.orElseThrow(() -> BaseException.builder()
-                .exceptionEnum(ExceptionEnum.NOT_FOUND_EXCEPTION)
-                .build());
-
-        return ResponseEntity.ok(vo.get());
+        return ResponseEntity.ok(vo);
     }
 
-    @PutMapping(URLConstants.PATH_VARIABLE_ID)
+    //    @PutMapping(URLConstants.PATH_VARIABLE_ID)
+    @Operation(summary = "update by id", description = "including null fields")
     public ResponseEntity<?> updateAllFields(@PathVariable String id, @RequestBody DTO dto) {
 
-        Optional<VO> vo = baseService.update(id, dto, false);
-
-        vo.orElseThrow(() -> BaseException.builder()
-                .exceptionEnum(ExceptionEnum.UPDATE_FAILED)
-                .build());
+        dto.setId(id);
+        baseService.update(dto);
 
         URI uri = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path(URLConstants.PATH_VARIABLE_ID)
-                .buildAndExpand(vo.map(BaseEntityAudit::getId).orElse(null))
+                .buildAndExpand(id)
                 .toUri();
         return ResponseEntity.ok(uri);
     }
 
-    @PatchMapping(URLConstants.PATH_VARIABLE_ID)
+    //    @PatchMapping(URLConstants.PATH_VARIABLE_ID)
+    @Operation(summary = "update by id", description = "excluding null fields")
     public ResponseEntity<?> updateSelectiveFields(@PathVariable String id, @RequestBody DTO dto) {
 
-        Optional<VO> vo = baseService.update(id, dto, true);
-
-        vo.orElseThrow(() -> BaseException.builder()
-                .exceptionEnum(ExceptionEnum.UPDATE_FAILED)
-                .build());
-
+        dto.setId(id);
+        baseService.update(dto, true);
         URI uri = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path(URLConstants.PATH_VARIABLE_ID)
-                .buildAndExpand(vo.map(BaseEntityAudit::getId).orElse(null))
+                .buildAndExpand(id)
                 .toUri();
         return ResponseEntity.ok(uri);
     }
 
-    @DeleteMapping(URLConstants.PATH_VARIABLE_ID)
+    //    @DeleteMapping(URLConstants.PATH_VARIABLE_ID)
+    @Operation(summary = "delete by id")
     public ResponseEntity<?> delete(@PathVariable String id) {
         baseService.remove(id);
         return ResponseEntity.noContent().build();

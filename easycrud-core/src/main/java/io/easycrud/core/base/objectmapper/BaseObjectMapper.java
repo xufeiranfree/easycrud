@@ -15,19 +15,19 @@ public interface BaseObjectMapper<DTO extends BaseDTO, VO extends BaseVO, DO ext
     // to vo
     VO doToVO(DO d);
 
-    List<VO> doToVOs(Collection<DO> ds);
+    List<VO> dosToVOs(Collection<DO> ds);
 
     VO poToVO(PO p);
 
-    List<VO> poToVOs(Collection<PO> ps);
+    List<VO> posToVOs(Collection<PO> ps);
 
     // to do
     DO dtoToDO(DTO dt);
 
-    List<DO> dtoToVOs(Collection<DTO> dts);
+    List<DO> dtosToVOs(Collection<DTO> dts);
 
     // to po
     PO dtoToPO(DTO dt);
 
-    List<PO> dtoToPOs(Collection<DTO> dts);
+    List<PO> dtosToPOs(Collection<DTO> dts);
 }

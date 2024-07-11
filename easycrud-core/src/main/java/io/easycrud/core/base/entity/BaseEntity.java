@@ -9,7 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
-import org.springframework.data.annotation.Version;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -24,13 +23,14 @@ public class BaseEntity implements Serializable {
     private static final long serialVersionUID = -2375924982927170763L;
 
     @Id
+//    @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     @GeneratedValue(generator = "snowflakeIdGenerator")
     @GenericGenerator(name = "snowflakeIdGenerator", type = SnowflakeIdGenerator.class)
     @Column(name = "id", length = 18, updatable = false, nullable = false)
     private String id;
 
-    @Version
-    @Column(name = "version")
-    private Integer version;
+    @Column(name = "deleted")
+//    @Schema(accessMode = Schema.AccessMode.READ_ONLY)
+    private Boolean deleted = false;
 
 }

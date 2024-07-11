@@ -1,6 +1,8 @@
 package io.easycrud.core.base.entity;
 
+import io.easycrud.core.config.listenser.AuditEventListener;
 import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,6 +19,7 @@ import java.time.LocalDateTime;
 @MappedSuperclass
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@EntityListeners(AuditEventListener.class)
 public class BaseEntityAudit extends BaseEntity {
 
     @Serial
@@ -29,6 +32,7 @@ public class BaseEntityAudit extends BaseEntity {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    // TODO
     @Column(name = "updated_by")
     private String updatedBy;
 

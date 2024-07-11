@@ -1,9 +1,9 @@
 spring:
   application:
-    name: rbcc-em-mfd-superlineleader
+    name: easycrud-example
   datasource:
     driverClassName: org.h2.Driver
-    url: jdbc:h2:file:c:/tools/h2/super_line_leader;MODE=Oracle;DEFAULT_NULL_ORDERING=HIGH;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:file:./testdb/easycrud;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE;INIT=RUNSCRIPT FROM 'classpath:sql/init.sql'
     platform: h2
     username: username
     password: password
@@ -20,7 +20,7 @@ spring:
 server:
   port: 8100
   servlet:
-    context-path: /rbcc-em-mfd-superlineleader
+    context-path: /easycrud-example
 
 management:
   endpoints:
