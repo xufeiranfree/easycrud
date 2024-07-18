@@ -17,7 +17,7 @@
         <spring-cloud.version>2023.0.1</spring-cloud.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <projectlombok.version>1.18.30</projectlombok.version>
-        <druid.version>1.2.22</druid.version>
+        <druid.version>1.2.23</druid.version>
         <caffeine.version>3.1.8</caffeine.version>
         <admin-client.version>3.2.3</admin-client.version>
         <commons-lang3.version>3.14.0</commons-lang3.version>
