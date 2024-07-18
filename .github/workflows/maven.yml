@@ -31,9 +31,9 @@ jobs:
       run: |
         cd easycrud-parent
         && mvn -B package --file pom.xml
-        && cd easycrud-core
+        && cd ../easycrud-core
         && mvn -B package --file pom.xml
-        && cd easycrud-example
+        && cd ../easycrud-example
         && mvn -B package --file pom.xml
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
