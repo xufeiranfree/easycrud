@@ -22,7 +22,7 @@
         <admin-client.version>3.2.3</admin-client.version>
         <commons-lang3.version>3.14.0</commons-lang3.version>
         <commons-collections4.version>4.4</commons-collections4.version>
-        <springdoc-ui.version>2.0.3</springdoc-ui.version>
+        <springdoc-ui.version>2.6.0</springdoc-ui.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
     </properties>
     <profiles>
