@@ -31,7 +31,7 @@ jobs:
       run: |
         cd easycrud-parent
         && mvn -B package --file pom.xml
-        cd easycrud-core
+        && cd easycrud-core
         && mvn -B package --file pom.xml
         && cd easycrud-example
         && mvn -B package --file pom.xml
