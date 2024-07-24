@@ -14,13 +14,7 @@ public class CommonHeadersInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-//        String userId = request.getHeader("X-User-Id");
-        String userId = request.getParameter("user-id");
-        if (request.getRequestURI().startsWith(request.getContextPath() + "/oa2-api")) {
-            if (StringUtils.isBlank(userId)) {
-                throw new RuntimeException("no user id");
-            }
-        }
+        String userId = request.getHeader("X-User-Id");
         CommonHeaderManager.setCommonHeaders(CommonHeaders.builder()
                 .userId(userId)
                 .build());

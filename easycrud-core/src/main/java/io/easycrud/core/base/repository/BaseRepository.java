@@ -1,8 +1,11 @@
 package io.easycrud.core.base.repository;
 
+import io.easycrud.core.base.annotation.UpdatedBy;
 import io.easycrud.core.base.entity.BaseDO;
 import io.easycrud.core.base.exception.BaseException;
 import io.easycrud.core.base.exception.ExceptionEnum;
+import io.easycrud.core.config.header.CommonHeaderManager;
+import io.easycrud.core.config.header.CommonHeaders;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -12,6 +15,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -21,9 +25,12 @@ import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -35,8 +42,8 @@ public abstract class BaseRepository<DO extends BaseDO> {
     protected final static String ID = "id";
     protected final static String DELETED = "deleted";
     protected final static String CREATED_BY = "createdBy";
-    protected final static int DELETED_FLAG = 1;
-    protected final static int NOT_DELETED_FLAG = 0;
+    protected final static boolean DELETED_FLAG = true;
+    protected final static boolean NOT_DELETED_FLAG = false;
 
     @Autowired
     protected EntityManager entityManager;
@@ -59,8 +66,8 @@ public abstract class BaseRepository<DO extends BaseDO> {
 
         query
                 .select(root)
-                .where(cb.and(cb.equal(root.get(ID), id)
-                ));
+                .where(cb.and(cb.equal(root.get(ID), id),
+                        cb.equal(root.get(DELETED), NOT_DELETED_FLAG)));
 
         return entityManager.createQuery(query).getResultStream().findFirst();
     }
@@ -74,7 +81,8 @@ public abstract class BaseRepository<DO extends BaseDO> {
         query
                 .select(root)
                 .where(cb.and(cb.equal(root.get(ID), id),
-                        cb.equal(root.get(CREATED_BY), userId)
+                        cb.equal(root.get(CREATED_BY), userId),
+                        cb.equal(root.get(DELETED), NOT_DELETED_FLAG)
                 ));
 
         return entityManager.createQuery(query).getResultStream().findFirst();
@@ -148,12 +156,23 @@ public abstract class BaseRepository<DO extends BaseDO> {
 
     @Transactional
     public void updateSelective(DO entity) {
+        update(entity, true);
+    }
+
+    @Transactional
+    public void update(DO entity) {
+        update(entity, false);
+    }
+
+    private void update(DO entity, boolean selective) {
+
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaUpdate<DO> update = cb.createCriteriaUpdate(getDomainClass());
         Root<DO> root = update.from(getDomainClass());
 
-        Field[] fields = entity.getClass().getFields();
-        for (Field field : fields) {
+        updateAudit(update, root);
+        Field[] declaredFields = getDomainClass().getDeclaredFields();
+        for (Field field : declaredFields) {
             field.setAccessible(true);
             Object value;
             try {
@@ -163,29 +182,17 @@ public abstract class BaseRepository<DO extends BaseDO> {
                         .exceptionEnum(ExceptionEnum.UPDATE_FAILED)
                         .build();
             }
-            if (value != null) {
-                update.set(root.get(field.getName()), value);
+            if (selective && value == null) {
+                continue;
             }
+            update.set(root.get(field.getName()), value);
         }
-
         update
-                .where(cb.equal(root.get(ID), entity.getId()));
+                .where(cb.and(cb.equal(root.get(ID), entity.getId()),
+                        cb.equal(root.get(DELETED), NOT_DELETED_FLAG)));
 
-        entityManager.createQuery(update).executeUpdate();
-    }
-
-
-    @Transactional
-    public void update(DO entity) {
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaUpdate<DO> update = cb.createCriteriaUpdate(getDomainClass());
-        Root<DO> root = update.from(getDomainClass());
-
-        update
-                .set(root, entity)
-                .where(cb.equal(root.get(ID), entity.getId()));
-
-        entityManager.createQuery(update).executeUpdate();
+        int i = entityManager.createQuery(update).executeUpdate();
+        assertUpdated(i);
     }
 
     @Transactional
@@ -195,13 +202,15 @@ public abstract class BaseRepository<DO extends BaseDO> {
         CriteriaUpdate<DO> update = cb.createCriteriaUpdate(getDomainClass());
         Root<DO> root = update.from(getDomainClass());
 
+        updateAudit(update, root);
         update
                 .set(root.get(DELETED), DELETED_FLAG)
                 .where(cb.and(cb.equal(root.get(ID), id),
                         cb.equal(root.get(DELETED), NOT_DELETED_FLAG)
                 ));
 
-        entityManager.createQuery(update).executeUpdate();
+        int i = entityManager.createQuery(update).executeUpdate();
+        assertUpdated(i);
     }
 
     @Transactional
@@ -211,6 +220,7 @@ public abstract class BaseRepository<DO extends BaseDO> {
         CriteriaUpdate<DO> update = cb.createCriteriaUpdate(getDomainClass());
         Root<DO> root = update.from(getDomainClass());
 
+        updateAudit(update, root);
         update
                 .set(root.get(DELETED), DELETED_FLAG)
                 .where(cb.and(cb.equal(root.get(ID), id),
@@ -218,7 +228,59 @@ public abstract class BaseRepository<DO extends BaseDO> {
                         cb.equal(root.get(DELETED), NOT_DELETED_FLAG)
                 ));
 
+        int i = entityManager.createQuery(update).executeUpdate();
+        assertUpdated(i);
+    }
+
+    // TODO big set partial
+    @Transactional
+    public void delete(Set<String> ids, String userId) {
+
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaUpdate<DO> update = cb.createCriteriaUpdate(getDomainClass());
+        Root<DO> root = update.from(getDomainClass());
+
+        updateAudit(update, root);
+        update
+                .set(root.get(DELETED), DELETED_FLAG)
+                .where(cb.and(root.get(ID).in(ids),
+                        cb.equal(root.get(CREATED_BY), userId),
+                        cb.equal(root.get(DELETED), NOT_DELETED_FLAG)
+                ));
+
         entityManager.createQuery(update).executeUpdate();
+    }
+
+    private List<Field> getAllFields(Class<?> type) {
+        List<Field> fields = new ArrayList<>();
+        while (type != null) {
+            Field[] declaredFields = type.getDeclaredFields();
+            fields.addAll(Arrays.asList(declaredFields));
+            type = type.getSuperclass();
+        }
+        return fields;
+    }
+
+    private void updateAudit(CriteriaUpdate<DO> update, Root<DO> root) {
+        Class<? super DO> superclass = getDomainClass().getSuperclass();
+        List<Field> allSuperFields = getAllFields(superclass);
+        for (Field field: allSuperFields) {
+            if (field.isAnnotationPresent(UpdateTimestamp.class)) {
+                update.set(root.get(field.getName()), LocalDateTime.now());
+            } else if(field.isAnnotationPresent(UpdatedBy.class)) {
+                Optional.ofNullable(CommonHeaderManager.getCommonHeaders())
+                        .map(CommonHeaders::getUserId)
+                        .ifPresent(userId -> update.set(root.get(field.getName()), userId));
+            }
+        }
+    }
+
+    private static void assertUpdated(int i) {
+        if (i == 0) {
+            throw BaseException.builder()
+                    .exceptionEnum(ExceptionEnum.NOT_FOUND_EXCEPTION)
+                    .build();
+        }
     }
 
 }

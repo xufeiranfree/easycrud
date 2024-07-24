@@ -1,5 +1,7 @@
 package io.easycrud.core.base.entity;
 
+import io.easycrud.core.base.annotation.CreatedBy;
+import io.easycrud.core.base.annotation.UpdatedBy;
 import io.easycrud.core.config.listenser.AuditEventListener;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
@@ -25,6 +27,7 @@ public class BaseEntityAudit extends BaseEntity {
     @Serial
     private static final long serialVersionUID = 5650218908042423624L;
 
+    @CreatedBy
     @Column(name = "created_by", updatable = false)
     private String createdBy;
 
@@ -32,7 +35,7 @@ public class BaseEntityAudit extends BaseEntity {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // TODO
+    @UpdatedBy
     @Column(name = "updated_by")
     private String updatedBy;
 

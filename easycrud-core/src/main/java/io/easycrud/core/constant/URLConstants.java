@@ -13,6 +13,9 @@ public class URLConstants {
     public static final String PUB_V1 = PUBLIC_API + V1;
     public static final String OA2_V1 = OAUTH2_API + V1;
 
+    // common url const
+    public static final String SEARCH = "/search";
+
     // common url var
     public static final String PATH_VARIABLE_ID = "/{id}";
 }

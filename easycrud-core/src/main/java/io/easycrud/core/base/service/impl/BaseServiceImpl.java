@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public class BaseServiceImpl<DTO extends BaseDTO, VO extends BaseVO, DO extends BaseDO, PO extends BasePO> implements BaseService<DTO, VO> {
+public abstract class BaseServiceImpl<DTO extends BaseDTO, VO extends BaseVO, DO extends BaseDO, PO extends BasePO> implements BaseService<DTO, VO> {
 
     @Autowired
     protected BaseRepository<DO> baseRepository;

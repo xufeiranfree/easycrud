@@ -19,6 +19,8 @@ public enum ExceptionEnum {
      */
     CREATE_FAILED(),
 
+    BAD_CREATE(HttpStatus.BAD_REQUEST, "Bad create request"),
+
     /**
      * 无效的创建请求
      */
